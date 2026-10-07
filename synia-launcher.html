@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synia launcher (prototype)</title>
+<style>
+  :root {
+    --bg: #f8f9fa;
+    --panel: #ffffff;
+    --text: #202122;
+    --muted: #54595d;
+    --line: #c8ccd1;
+    --blue: #3366cc;
+    --blue-dark: #2a4b8d;
+    --focus: #36c;
+    --err: #b32424;
+    --hover: #eaf3ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101418;
+      --panel: #1a2027;
+      --text: #eaecf0;
+      --muted: #a2a9b1;
+      --line: #3b444d;
+      --blue: #6b9bf0;
+      --blue-dark: #8db2f5;
+      --focus: #8db2f5;
+      --err: #ff8f8f;
+      --hover: #22303f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { min-height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 2rem 1rem 4rem;
+  }
+  main { max-width: 38rem; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; font-weight: 650; letter-spacing: -.01em; }
+  .lead { margin: 0 0 1.75rem; color: var(--muted); }
+  form {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1.5rem;
+  }
+  .field { margin-bottom: 1.4rem; position: relative; }
+  label { display: block; font-weight: 600; margin-bottom: .3rem; }
+  .hint { color: var(--muted); font-size: .875rem; margin: .3rem 0 0; }
+  input[type=text], input[type=url] {
+    width: 100%;
+    font: inherit;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: .55rem .7rem;
+  }
+  input:focus, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+    border-color: var(--focus);
+  }
+  ul.results {
+    list-style: none;
+    margin: 2px 0 0;
+    padding: 0;
+    position: absolute;
+    left: 0; right: 0;
+    z-index: 5;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.18);
+    max-height: 18rem;
+    overflow-y: auto;
+  }
+  ul.results[hidden] { display: none; }
+  ul.results li { padding: .5rem .7rem; cursor: pointer; border-bottom: 1px solid var(--line); }
+  ul.results li:last-child { border-bottom: 0; }
+  ul.results li[aria-selected=true], ul.results li:hover { background: var(--hover); }
+  .r-label { font-weight: 600; }
+  .r-id { color: var(--muted); font-size: .85rem; margin-left: .4rem; }
+  .r-desc { display: block; color: var(--muted); font-size: .875rem; }
+  .r-empty { cursor: default !important; color: var(--muted); }
+  .picked { margin: .35rem 0 0; font-size: .9rem; color: var(--muted); min-height: 1.3em; }
+  .picked strong { color: var(--text); }
+  button.go {
+    font: inherit; font-weight: 600;
+    color: #fff; background: var(--blue-dark);
+    border: 0; border-radius: 4px;
+    padding: .65rem 1.3rem; cursor: pointer;
+  }
+  @media (prefers-color-scheme: dark) { button.go { color: #101418; background: var(--blue); } }
+  button.go:hover { filter: brightness(1.1); }
+  #status { margin-top: 1rem; min-height: 1.5em; }
+  #status.error { color: var(--err); }
+  #status a { color: var(--blue); word-break: break-all; }
+  details { margin-top: 1.5rem; color: var(--muted); font-size: .9rem; }
+  summary { cursor: pointer; }
+  details .field { margin: .8rem 0 0; }
+  code { font-size: .85em; }
+  .explain {
+    margin-top: .8rem;
+    padding: .7rem .9rem;
+    border-left: 3px solid var(--blue);
+    background: var(--hover);
+    border-radius: 0 4px 4px 0;
+    font-size: .9rem;
+  }
+  .explain p { margin: 0 0 .5rem; }
+  .explain p:last-child { margin-bottom: 0; }
+  .explain a { color: var(--blue-dark); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Synia launcher</h1>
+  <p class="lead">Pick an item and the Wikidata page that defines your aspect, then open the result in Synia.</p>
+
+  <form id="form" autocomplete="off" novalidate>
+    <div class="field">
+      <label for="item">Item (optional)</label>
+      <input type="text" id="item" role="combobox" aria-expanded="false"
+             aria-controls="results" aria-autocomplete="list"
+             placeholder="Type a name, or a Q-id such as Q42">
+      <ul class="results" id="results" role="listbox" hidden></ul>
+      <p class="picked" id="picked" aria-live="polite"></p>
+      <p class="hint">Leave this empty if the aspect shows queries that are not about one specific item.</p>
+    </div>
+
+    <div class="field">
+      <label for="aspect">Aspect page (Wikidata URL)</label>
+      <input type="url" id="aspect" list="recent"
+             placeholder="https://www.wikidata.org/wiki/Wikidata:Synia:work">
+      <datalist id="recent"></datalist>
+      <p class="hint">Paste the address of the page. Pages you used before appear as suggestions.</p>
+      <div class="explain">
+        <p><strong>What is an aspect page?</strong> It is a page on Wikidata that tells Synia what to display:
+        a title and one or more SPARQL queries. Synia reads it and shows the results, for an item or on its own.</p>
+        <p>You can find existing aspect pages on
+        <a href="https://www.wikidata.org/wiki/Wikidata:Synia" target="_blank" rel="noopener">Wikidata:Synia</a>.
+        To make your own, create a new subpage of Wikidata:Synia on Wikidata
+        (for example <code>Wikidata:Synia:my-aspect</code>), then paste its address here.</p>
+      </div>
+    </div>
+
+    <button type="submit" class="go">Open in Synia</button>
+    <div id="status" role="status" aria-live="polite"></div>
+
+    <details>
+      <summary>Synia address pattern (for testing)</summary>
+      <div class="field">
+        <label for="template">Pattern with an item</label>
+        <input type="text" id="template">
+        <p class="hint">
+          Placeholders: <code>{qid}</code> item (Q42), <code>{aspect}</code> short name
+          (<code>work</code>), <code>{aspect_title}</code> full page title
+          (<code>Wikidata:Synia:work</code>). Adjust this to match how Synia builds its addresses.
+        </p>
+      </div>
+      <div class="field">
+        <label for="template-noitem">Pattern without an item</label>
+        <input type="text" id="template-noitem">
+        <p class="hint">Used when the item field is left empty. Same placeholders, except <code>{qid}</code>.</p>
+      </div>
+    </details>
+  </form>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- Settings ---------------------------------------------------------
+  // Default guess: confirm the real pattern with the developer, or edit it
+  // in the "Synia address pattern" box on the page.
+  var DEFAULT_TEMPLATE = "https://synia.toolforge.org/#{aspect}/{qid}";
+  var DEFAULT_TEMPLATE_NO_ITEM = "https://synia.toolforge.org/{aspect}";
+  var TEMPLATE_NO_ITEM_KEY = "synia-launcher-template-noitem";
+  var PREFIX = "Wikidata:Synia:";
+  var API = "https://www.wikidata.org/w/api.php";
+  var LANG = (navigator.language || "en").split("-")[0];
+  var RECENT_KEY = "synia-launcher-recent-aspects";
+  var TEMPLATE_KEY = "synia-launcher-template";
+  var MAX_RECENT = 10;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var itemInput = $("item"), results = $("results"), picked = $("picked");
+  var aspectInput = $("aspect"), recent = $("recent"), status = $("status");
+  var templateInput = $("template");
+  var templateNoItemInput = $("template-noitem");
+
+  var selectedQid = null;
+  var activeIndex = -1;
+  var timer = null;
+  var controller = null;
+
+  // ---- Storage helpers (can fail in private mode) -----------------------
+  function load(key, fallback) {
+    try { var v = localStorage.getItem(key); return v === null ? fallback : v; }
+    catch (e) { return fallback; }
+  }
+  function save(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { /* ignore */ }
+  }
+  function getRecent() {
+    try { return JSON.parse(load(RECENT_KEY, "[]")) || []; } catch (e) { return []; }
+  }
+  function addRecent(url) {
+    var list = getRecent().filter(function (u) { return u !== url; });
+    list.unshift(url);
+    save(RECENT_KEY, JSON.stringify(list.slice(0, MAX_RECENT)));
+    renderRecent();
+  }
+  function renderRecent() {
+    recent.innerHTML = "";
+    getRecent().forEach(function (u) {
+      var o = document.createElement("option");
+      o.value = u;
+      recent.appendChild(o);
+    });
+  }
+
+  // ---- Item autocomplete -------------------------------------------------
+  function setPicked(qid, label) {
+    selectedQid = qid;
+    picked.innerHTML = "";
+    if (qid) {
+      var s = document.createElement("span");
+      s.textContent = "Selected: ";
+      var b = document.createElement("strong");
+      b.textContent = (label ? label + " " : "") + "(" + qid + ")";
+      picked.appendChild(s); picked.appendChild(b);
+    }
+  }
+
+  function closeResults() {
+    results.hidden = true;
+    results.innerHTML = "";
+    itemInput.setAttribute("aria-expanded", "false");
+    activeIndex = -1;
+  }
+
+  function highlight(i) {
+    var opts = results.querySelectorAll("li[data-qid]");
+    opts.forEach(function (o, n) { o.setAttribute("aria-selected", n === i ? "true" : "false"); });
+    activeIndex = i;
+    if (opts[i]) opts[i].scrollIntoView({ block: "nearest" });
+  }
+
+  function choose(qid, label) {
+    itemInput.value = label || qid;
+    setPicked(qid, label);
+    closeResults();
+  }
+
+  function showResults(list) {
+    results.innerHTML = "";
+    if (!list.length) {
+      var li = document.createElement("li");
+      li.className = "r-empty";
+      li.textContent = "No item found. Try another spelling or enter a Q-id.";
+      results.appendChild(li);
+    }
+    list.forEach(function (r) {
+      var li = document.createElement("li");
+      li.setAttribute("role", "option");
+      li.setAttribute("data-qid", r.id);
+      li.setAttribute("data-label", r.label || r.id);
+      li.setAttribute("aria-selected", "false");
+      var l = document.createElement("span"); l.className = "r-label"; l.textContent = r.label || r.id;
+      var i = document.createElement("span"); i.className = "r-id"; i.textContent = r.id;
+      var d = document.createElement("span"); d.className = "r-desc"; d.textContent = r.description || "";
+      li.appendChild(l); li.appendChild(i); li.appendChild(d);
+      li.addEventListener("mousedown", function (ev) {
+        ev.preventDefault();
+        choose(r.id, r.label || r.id);
+      });
+      results.appendChild(li);
+    });
+    results.hidden = false;
+    itemInput.setAttribute("aria-expanded", "true");
+    activeIndex = -1;
+  }
+
+  function search(term) {
+    if (controller) controller.abort();
+    controller = new AbortController();
+    var url = API + "?action=wbsearchentities&format=json&origin=*&type=item&limit=8" +
+      "&language=" + encodeURIComponent(LANG) + "&uselang=" + encodeURIComponent(LANG) +
+      "&search=" + encodeURIComponent(term);
+    fetch(url, { signal: controller.signal })
+      .then(function (r) { return r.json(); })
+      .then(function (data) { showResults(data.search || []); })
+      .catch(function (e) {
+        if (e.name === "AbortError") return;
+        closeResults();
+        setStatus("The item search is unavailable right now. You can still type a Q-id.", true);
+      });
+  }
+
+  itemInput.addEventListener("input", function () {
+    setPicked(null);
+    setStatus("");
+    clearTimeout(timer);
+    var term = itemInput.value.trim();
+    if (!term) { closeResults(); return; }
+    if (/^Q\d+$/i.test(term)) {
+      closeResults();
+      setPicked(term.toUpperCase(), "");
+      return;
+    }
+    timer = setTimeout(function () { search(term); }, 250);
+  });
+
+  itemInput.addEventListener("keydown", function (ev) {
+    var opts = results.querySelectorAll("li[data-qid]");
+    if (ev.key === "ArrowDown" && opts.length) {
+      ev.preventDefault();
+      highlight((activeIndex + 1) % opts.length);
+    } else if (ev.key === "ArrowUp" && opts.length) {
+      ev.preventDefault();
+      highlight((activeIndex - 1 + opts.length) % opts.length);
+    } else if (ev.key === "Enter" && !results.hidden && activeIndex >= 0) {
+      ev.preventDefault();
+      choose(opts[activeIndex].getAttribute("data-qid"), opts[activeIndex].getAttribute("data-label"));
+    } else if (ev.key === "Escape") {
+      closeResults();
+    }
+  });
+
+  itemInput.addEventListener("blur", function () { setTimeout(closeResults, 120); });
+
+  // ---- Aspect URL parsing ------------------------------------------------
+  function parseAspect(raw) {
+    var value = raw.trim();
+    if (!value) return { error: "Enter the address of the aspect page." };
+    var u;
+    try { u = new URL(value); } catch (e) {
+      return { error: "That is not a valid web address. Paste the full Wikidata page URL." };
+    }
+    if (!/(^|\.)wikidata\.org$/.test(u.hostname)) {
+      return { error: "The address must point to a page on wikidata.org." };
+    }
+    var title = u.searchParams.get("title");
+    if (!title) {
+      var m = u.pathname.match(/\/wiki\/(.+)$/);
+      title = m ? decodeURIComponent(m[1]) : "";
+    }
+    title = title.replace(/_/g, " ").trim();
+    if (!title) return { error: "No page title found in that address." };
+    var shortName = title.indexOf(PREFIX) === 0 ? title.slice(PREFIX.length) : title;
+    return { title: title.replace(/ /g, "_"), shortName: shortName.replace(/ /g, "_"), url: value };
+  }
+
+  function buildSyniaUrl(qid, aspect) {
+    var tpl = qid
+      ? (templateInput.value.trim() || DEFAULT_TEMPLATE)
+      : (templateNoItemInput.value.trim() || DEFAULT_TEMPLATE_NO_ITEM);
+    return tpl
+      .replace(/\{qid\}/g, encodeURIComponent(qid || ""))
+      .replace(/\{aspect_title\}/g, encodeURIComponent(aspect.title))
+      .replace(/\{aspect\}/g, encodeURIComponent(aspect.shortName));
+  }
+
+  // ---- Status ------------------------------------------------------------
+  function setStatus(msg, isError, link) {
+    status.className = isError ? "error" : "";
+    status.textContent = msg;
+    if (link) {
+      status.appendChild(document.createTextNode(" "));
+      var a = document.createElement("a");
+      a.href = link; a.textContent = link; a.target = "_blank"; a.rel = "noopener";
+      status.appendChild(a);
+    }
+  }
+
+  // ---- Submit --------------------------------------------------------------
+  $("form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var typed = itemInput.value.trim();
+    if (!selectedQid && /^Q\d+$/i.test(typed)) selectedQid = typed.toUpperCase();
+    if (!selectedQid && typed) {
+      setStatus("Choose an item from the suggestions, enter a Q-id, or clear the field to open the aspect without an item.", true);
+      itemInput.focus();
+      return;
+    }
+    var aspect = parseAspect(aspectInput.value);
+    if (aspect.error) { setStatus(aspect.error, true); aspectInput.focus(); return; }
+
+    var target = buildSyniaUrl(selectedQid, aspect);
+    save(TEMPLATE_KEY, templateInput.value.trim());
+    save(TEMPLATE_NO_ITEM_KEY, templateNoItemInput.value.trim());
+    addRecent(aspect.url);
+    var w = window.open(target, "_blank", "noopener");
+    setStatus(w ? "Opened in a new tab:" : "Your browser blocked the new tab. Open it here:", false, target);
+  });
+
+  // ---- Start-up: template, recents, optional URL parameters ----------------
+  templateInput.value = load(TEMPLATE_KEY, "") || DEFAULT_TEMPLATE;
+  templateNoItemInput.value = load(TEMPLATE_NO_ITEM_KEY, "") || DEFAULT_TEMPLATE_NO_ITEM;
+  renderRecent();
+
+  var params = new URLSearchParams(location.search);
+  var pItem = params.get("item"), pAspect = params.get("aspect");
+  if (pItem && /^Q\d+$/i.test(pItem)) {
+    itemInput.value = pItem.toUpperCase();
+    setPicked(pItem.toUpperCase(), "");
+  }
+  if (pAspect) {
+    aspectInput.value = /^https?:/i.test(pAspect)
+      ? pAspect
+      : "https://www.wikidata.org/wiki/" + pAspect.replace(/ /g, "_");
+  }
+})();
+</script>
+</body>
+</html>
