@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to use the Synia launcher</title>
+<style>
+  :root {
+    --bg: #f8f9fa;
+    --panel: #ffffff;
+    --text: #202122;
+    --muted: #54595d;
+    --line: #c8ccd1;
+    --blue: #3366cc;
+    --blue-dark: #2a4b8d;
+    --soft: #eaf3ff;
+    --warn-bg: #fef6e7;
+    --warn-line: #fc3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101418;
+      --panel: #1a2027;
+      --text: #eaecf0;
+      --muted: #a2a9b1;
+      --line: #3b444d;
+      --blue: #6b9bf0;
+      --blue-dark: #8db2f5;
+      --soft: #22303f;
+      --warn-bg: #3a2f14;
+      --warn-line: #b8912b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 2rem 1rem 4rem;
+  }
+  main { max-width: 42rem; margin: 0 auto; }
+  h1 { font-size: 1.9rem; margin: 0 0 .4rem; line-height: 1.2; letter-spacing: -.01em; }
+  h2 { font-size: 1.3rem; margin: 2.4rem 0 .6rem; }
+  h3 { font-size: 1.05rem; margin: 1.4rem 0 .3rem; }
+  p { margin: 0 0 .9rem; }
+  .lead { color: var(--muted); font-size: 1.1rem; margin-bottom: 1.4rem; }
+  a { color: var(--blue-dark); }
+  a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .cta {
+    display: inline-block;
+    background: var(--blue-dark);
+    color: #fff;
+    padding: .7rem 1.4rem;
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  @media (prefers-color-scheme: dark) { .cta { color: #101418; background: var(--blue); } }
+  .cta:hover { filter: brightness(1.1); }
+  nav {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: .8rem 1.2rem;
+    margin: 1.6rem 0 0;
+  }
+  nav strong { display: block; margin-bottom: .2rem; }
+  nav ol { margin: 0; padding-left: 1.2rem; }
+  .steps { list-style: none; padding: 0; margin: 1rem 0 0; counter-reset: step; }
+  .steps > li {
+    counter-increment: step;
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1rem 1.2rem 1rem 3.6rem;
+    margin-bottom: .9rem;
+  }
+  .steps > li::before {
+    content: counter(step);
+    position: absolute;
+    left: 1rem; top: 1rem;
+    width: 1.8rem; height: 1.8rem;
+    border-radius: 50%;
+    background: var(--blue-dark);
+    color: #fff;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.8rem;
+  }
+  @media (prefers-color-scheme: dark) { .steps > li::before { background: var(--blue); color: #101418; } }
+  .steps h3 { margin-top: 0; }
+  .steps p:last-child { margin-bottom: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    margin: .8rem 0 1.2rem;
+    font-size: .95rem;
+  }
+  th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--soft); }
+  tr:last-child td { border-bottom: 0; }
+  code { font-size: .9em; background: var(--soft); padding: .05rem .35rem; border-radius: 3px; }
+  .tip {
+    background: var(--soft);
+    border-left: 4px solid var(--blue);
+    border-radius: 0 6px 6px 0;
+    padding: .7rem 1rem;
+    margin: 1rem 0;
+  }
+  .tip p:last-child { margin: 0; }
+  .warn {
+    background: var(--warn-bg);
+    border-left: 4px solid var(--warn-line);
+    border-radius: 0 6px 6px 0;
+    padding: .7rem 1rem;
+    margin: 1rem 0;
+  }
+  .warn p:last-child { margin: 0; }
+  details {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: .7rem 1rem;
+    margin-bottom: .6rem;
+  }
+  summary { cursor: pointer; font-weight: 600; }
+  summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  details p { margin: .6rem 0 0; }
+  footer { margin-top: 3rem; color: var(--muted); font-size: .95rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>How to use the Synia launcher</h1>
+  <p class="lead">Open the Synia view you want, for the Wikidata item you want, in a few clicks.</p>
+  <a class="cta" href="synia-launcher.html">Open the launcher</a>
+
+  <nav aria-label="On this page">
+    <strong>On this page</strong>
+    <ol>
+      <li><a href="#what">What the launcher does</a></li>
+      <li><a href="#steps">Open a page in three steps</a></li>
+      <li><a href="#items">How many items do I need?</a></li>
+      <li><a href="#tips">Handy tips</a></li>
+      <li><a href="#create">Create your own aspect page</a></li>
+      <li><a href="#help">If something goes wrong</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="what">What the launcher does</h2>
+  <p>Synia shows information from Wikidata in ready-made views. Each view is described on a Wikidata page, called an <strong>aspect page</strong>. For example, an aspect page can list the works linked to a person, or the venues of a city.</p>
+  <p>The launcher helps you pick an aspect page, tell it which Wikidata item or items you are interested in, and open the result in Synia. You no longer need to build the Synia address by hand.</p>
+
+  <h2 id="steps">Open a page in three steps</h2>
+  <ol class="steps">
+    <li>
+      <h3>Choose an aspect page</h3>
+      <p>You have three ways to do it:</p>
+      <ul>
+        <li><strong>Paste its address</strong> from Wikidata into the first field.</li>
+        <li><strong>Pick a recent one.</strong> Click in the field and the pages you used before are suggested.</li>
+        <li><strong>Browse the list.</strong> Click &ldquo;Browse aspect pages&rdquo;, type a few letters to filter, and click the page you want.</li>
+      </ul>
+    </li>
+    <li>
+      <h3>Add the item or items</h3>
+      <p>The launcher shows the right number of fields for the page you chose. Start typing a name in a field, for example the name of a person, a city or a language, and pick the match from the suggestions. If you already know the Wikidata number (such as <code>Q42</code>), you can type it directly.</p>
+      <p>The last field is always optional. See <a href="#items">How many items do I need?</a> below.</p>
+    </li>
+    <li>
+      <h3>Click &ldquo;Open in Synia&rdquo;</h3>
+      <p>Synia opens in a new tab. The address is also shown under the button, in case your browser blocked the new tab.</p>
+    </li>
+  </ol>
+
+  <h2 id="items">How many items do I need?</h2>
+  <p>The launcher works it out for you from the name of the aspect page. You do not have to remember anything, but it helps to know what to expect:</p>
+  <table>
+    <thead>
+      <tr><th>If the page name&hellip;</th><th>The launcher asks for</th><th>Example</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>ends with <code>-index</code></td><td>No item</td><td><code>library-index</code></td></tr>
+      <tr><td>has no dash</td><td>One item</td><td><code>venue</code></td></tr>
+      <tr><td>has a dash joining two names</td><td>Two items, in the order of the names</td><td><code>language-language</code></td></tr>
+    </tbody>
+  </table>
+  <div class="tip">
+    <p><strong>Leaving the last field empty is fine.</strong> Synia may then show a more general page, such as an overview, instead of a page about one specific item. With two items, the first one is needed; the second is optional.</p>
+  </div>
+  <p>When the two names in the page name are the same, as in <code>language-language</code>, the fields are labelled &ldquo;first&rdquo; and &ldquo;second&rdquo;. The order can matter, so check which item you put where.</p>
+
+  <h2 id="tips">Handy tips</h2>
+  <h3>Share exactly what you see</h3>
+  <p>You can send colleagues a link that already contains the aspect page and the items, so they only have to click &ldquo;Open in Synia&rdquo;. Add the details to the end of the launcher address like this:</p>
+  <p><code>synia-launcher.html?aspect=Wikidata:Synia:language-language&amp;item1=Q9035&amp;item2=Q150</code></p>
+  <p>Use <code>item1</code> for the first item and <code>item2</code> for the second. If you only want to share the aspect page, leave the items out.</p>
+
+  <h3>Find out what an aspect page contains</h3>
+  <p>In the browse list, the small arrow next to each page opens it on Wikidata, so you can read its title and queries before using it.</p>
+
+  <h3>Redirects</h3>
+  <p>Some entries in the list are marked <em>redirect</em>. They simply point to another page, and you can use them like any other.</p>
+
+  <h3>Change the item, keep the page</h3>
+  <p>Come back to the launcher, change the item, and click the button again. Your aspect page is only a click away in the recent suggestions.</p>
+
+  <h2 id="create">Create your own aspect page</h2>
+  <p>If you can edit Wikidata, you can write your own aspect page. Create a new subpage of <a href="https://www.wikidata.org/wiki/Wikidata:Synia" target="_blank" rel="noopener">Wikidata:Synia</a>, for example <code>Wikidata:Synia:myaspect</code>, and add a title and your queries. Then paste its address into the launcher.</p>
+  <div class="warn">
+    <p><strong>Choose the page name carefully.</strong> The name tells the launcher how many items to ask for (see the table above). Use no dash for one item, two names joined by a dash for two items, and end the name with <code>-index</code> for a page that needs no item. Capital letters matter: <code>-Index</code> is not the same as <code>-index</code>.</p>
+  </div>
+
+  <h2 id="help">If something goes wrong</h2>
+  <details>
+    <summary>The launcher says the address is not valid</summary>
+    <p>Paste the full address of the Wikidata page, starting with <code>https://www.wikidata.org/</code>. Addresses from other websites are not accepted.</p>
+  </details>
+  <details>
+    <summary>No item field appears</summary>
+    <p>Either the page needs no item (its name ends with <code>-index</code>, and the launcher says so), or the address is not valid yet. Check for a red message under the first field.</p>
+  </details>
+  <details>
+    <summary>I cannot find my item in the suggestions</summary>
+    <p>Try another spelling, a shorter search, or the name in another language. If you know the Wikidata number, type it directly, for example <code>Q42</code>.</p>
+  </details>
+  <details>
+    <summary>The launcher asks me to choose a suggestion</summary>
+    <p>It means you typed a name without picking one of the matches. Click a suggestion in the list, type a Wikidata number, or clear the field if the item is optional.</p>
+  </details>
+  <details>
+    <summary>Nothing opens when I click the button</summary>
+    <p>Your browser may have blocked the new tab. Use the link shown under the button, or allow pop-ups for this site.</p>
+  </details>
+  <details>
+    <summary>The list of aspect pages does not load</summary>
+    <p>Check your internet connection and click &ldquo;Refresh list&rdquo;. You can still paste an address in the meantime.</p>
+  </details>
+  <details>
+    <summary>The page I opened in Synia is empty or not what I expected</summary>
+    <p>Check that you picked the right item, and in the right order for pages with two items. Opening the aspect page on Wikidata, with the small arrow in the list, shows what it is meant to display.</p>
+  </details>
+
+  <footer>
+    <p>A question or a problem with the launcher? <a href="https://github.com/AdelieRanville/Synia-launcher/issues" target="_blank" rel="noopener">Tell us on GitHub</a>.</p>
+    <p><a href="synia-launcher.html">Back to the launcher</a></p>
+  </footer>
+</main>
+</body>
+</html>
